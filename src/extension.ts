@@ -31,3 +31,5 @@ export class LibrespotPatcher implements MoosyncExtensionTemplate {
     return OS.UNSUPPORTED
   }
 }
+
+new LibrespotPatcher().onStarted()
