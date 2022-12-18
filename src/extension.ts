@@ -15,17 +15,13 @@ export class LibrespotPatcher implements MoosyncExtensionTemplate {
   private gitHandler = new GitHandler(this.os, DOWNLOAD_DIR, BINARY_DIR)
   private rustHandler = new RustHandler(this.os, DOWNLOAD_DIR, BINARY_DIR)
   private yarnHandler = new YarnHandler(this.os, DOWNLOAD_DIR, BINARY_DIR)
-
-  private librespotNodeHandler = new LibrespotNodeHandler(BUILD_DIR)
+  private librespotNodeHandler = new LibrespotNodeHandler(this.os, BUILD_DIR)
 
   async onStarted(): Promise<void> {
-    const gitExec = await this.gitHandler.downloadGit()
-    const rustExecs = await this.rustHandler.downloadRust()
-    const yarnExec = await this.yarnHandler.downloadYarn()
-
-    console.log(rustExecs)
-
-    await this.librespotNodeHandler.patchAndBuild(gitExec, yarnExec, rustExecs)
+    // const gitExec = await this.gitHandler.downloadGit()
+    // const rustExecs = await this.rustHandler.downloadRust()
+    // const yarnExec = await this.yarnHandler.downloadYarn()
+    // await this.librespotNodeHandler.patchAndBuild(gitExec, yarnExec, rustExecs)
   }
 
   private getOS(): OS {
@@ -35,5 +31,3 @@ export class LibrespotPatcher implements MoosyncExtensionTemplate {
     return OS.UNSUPPORTED
   }
 }
-
-new LibrespotPatcher().onStarted()
