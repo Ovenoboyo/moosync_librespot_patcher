@@ -12,7 +12,35 @@ export default class MyExtensionData implements ExtensionData {
 
 class MyExtensionFactory implements ExtensionFactory {
   async registerPreferences(): Promise<ExtensionPreferenceGroup[]> {
-    return []
+    return [
+      {
+        key: 'buttons',
+        title: 'Librespot',
+        type: 'ButtonGroup',
+        description: '',
+        items: [
+          {
+            key: 'start',
+            title: 'Patch Librespot',
+            lastClicked: 0
+          }
+        ]
+      },
+      {
+        type: 'FilePicker',
+        key: 'download-dir',
+        title: 'Dependency download directory',
+        description: 'Path where all dependencies will be downloaded. Size may exceed 1GiB',
+        default: ''
+      },
+      {
+        type: 'FilePicker',
+        key: 'build-dir',
+        title: 'Librespot build dir',
+        description: 'Path where everything will be compiled. Size may exceed 1.5GiB',
+        default: ''
+      }
+    ]
   }
 
   async create(): Promise<MoosyncExtensionTemplate> {

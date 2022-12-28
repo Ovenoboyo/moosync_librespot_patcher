@@ -40,10 +40,7 @@ export class RustHandler {
 
   public async downloadRust() {
     const cargoExec = await this.findCargoExec()
-
-    if (cargoExec) {
-      return [cargoExec, undefined, undefined]
-    }
+    if (cargoExec) return [cargoExec, undefined, undefined]
 
     let downloadUrl: string
     let filePath: string

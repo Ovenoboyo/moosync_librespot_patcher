@@ -1,4 +1,4 @@
-import { downloadFile, execAsync, extractArchive, OS, spawnAsync } from './utils'
+import { downloadFile, execAsync, extractArchive, log, OS, spawnAsync } from './utils'
 import axios from 'axios'
 import { promises as fs } from 'fs'
 import path from 'path'
@@ -59,13 +59,13 @@ export class GitHandler {
   }
 
   public async downloadGit() {
+    const data = await this.findGitExec()
+    if (data) return data
+
     let version: string
     let filePath: string
     let downloadUrl: string
     let hash: string
-
-    const data = await this.findGitExec()
-    if (data) return data
 
     if (this.os === OS.WIN32) {
       const latestTag = (await axios.get(`https://api.github.com/repos/git-for-windows/git/releases`)).data[0]
@@ -102,7 +102,7 @@ export class GitHandler {
     }
 
     if (!(await checkFile(filePath, hash))) {
-      console.debug('downloading git portable from', downloadUrl)
+      console.debug('Downloading git portable from', downloadUrl)
       await downloadFile(downloadUrl, filePath)
     }
 
@@ -111,7 +111,7 @@ export class GitHandler {
       path.join(this.BINARY_DIR, path.basename(filePath).replace(path.extname(filePath), ''))
     )
     if (this.os === OS.LINUX) {
-      console.log('compiling git')
+      log('Compiling git...')
       await this.compileGit(extractDir, version)
     }
     return await this.findGitExec(extractDir)

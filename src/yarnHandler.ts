@@ -1,7 +1,6 @@
-import { checkFile, downloadFile, execAsync, extractArchive, makeDir, OS } from './utils'
+import { checkFile, downloadFile, execAsync, extractArchive, log, makeDir, OS } from './utils'
 import path from 'path'
 import { promises as fs } from 'fs'
-import axios from 'axios'
 
 export class YarnHandler {
   private os: OS
@@ -29,6 +28,9 @@ export class YarnHandler {
   }
 
   public async downloadYarn() {
+    // const yarnExec = await this.findYarnExec()
+    // if (yarnExec) return yarnExec
+
     let downloadUrl: string
     let filePath: string
 
@@ -40,6 +42,7 @@ export class YarnHandler {
     }
 
     const extractDir = path.join(this.BINARY_DIR, path.basename(filePath).replace(path.extname(filePath), ''))
+
     await extractArchive(filePath, extractDir)
 
     return await this.findYarnExec(extractDir, 'v1.22.19')

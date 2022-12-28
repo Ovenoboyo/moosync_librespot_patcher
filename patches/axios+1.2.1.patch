@@ -1,0 +1,13 @@
+diff --git a/node_modules/axios/lib/adapters/http.js b/node_modules/axios/lib/adapters/http.js
+index 4965cd4..a944dfa 100755
+--- a/node_modules/axios/lib/adapters/http.js
++++ b/node_modules/axios/lib/adapters/http.js
+@@ -105,7 +105,7 @@ function setProxy(options, configProxy, location) {
+   };
+ }
+ 
+-const isHttpAdapterSupported = typeof process !== 'undefined' && utils.kindOf(process) === 'process';
++const isHttpAdapterSupported = true;
+ 
+ /*eslint consistent-return:0*/
+ export default isHttpAdapterSupported && function httpAdapter(config) {

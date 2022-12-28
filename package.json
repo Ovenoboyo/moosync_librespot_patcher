@@ -1,16 +1,17 @@
 {
-  "name": "moosync.extension.starter",
+  "name": "moosync.librespot.patcher",
   "version": "1.0.0",
-  "description": "A sample extension",
+  "description": "Librespot patcher",
   "main": "src/index.ts",
   "icon": "assets/icon.svg",
   "extensionEntry": "dist/index.js",
   "moosyncExtension": true,
-  "displayName": "MyExtension",
+  "displayName": "Librespot patcher",
   "scripts": {
     "watch:build": "webpack --watch",
     "webpack:build": "webpack --config webpack.config.js",
-    "build": "npm run webpack:build && mopack --path ."
+    "build": "npm run webpack:build && mopack --path .",
+    "postinstall": "patch-package"
   },
   "author": "Sahil Gupte",
   "devDependencies": {
@@ -28,6 +29,7 @@
     "adm-zip": "^0.5.9",
     "axios": "^1.2.1",
     "gunzip-maybe": "^1.4.2",
+    "patch-package": "^6.5.0",
     "tar-stream": "^2.2.0"
   },
   "exclude": [

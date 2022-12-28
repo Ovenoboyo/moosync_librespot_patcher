@@ -1,11 +1,12 @@
 import { promises as fs, createWriteStream, createReadStream } from 'fs'
 import crypto from 'crypto'
-import axios from 'axios'
 import gunzip from 'gunzip-maybe'
 import tar from 'tar-stream'
 import path from 'path'
 import AdmZip from 'adm-zip'
 import { ExecException, exec, SpawnOptionsWithoutStdio, spawn } from 'child_process'
+import https from 'https'
+import http from 'http'
 
 export enum OS {
   LINUX = 'linux',
@@ -33,13 +34,14 @@ export async function checkFile(filepath: string, sha256: string) {
     await fs.access(filepath)
     const fileBuffer = await fs.readFile(filepath)
     const hashSum = crypto.createHash('sha256')
+
     hashSum.update(fileBuffer)
 
     const hex = hashSum.digest('hex')
 
     const ret = hex === sha256.trim()
     if (!ret) {
-      console.warn('Expected:', sha256, 'got:', hex)
+      log('Expected:', sha256, 'got:', hex)
     }
     return ret
   } catch {
@@ -47,25 +49,42 @@ export async function checkFile(filepath: string, sha256: string) {
   }
 }
 
-export async function downloadFile(url: string, downloadFile: string) {
-  await makeDir(path.dirname(downloadFile))
-  await removeFile(downloadFile)
+export async function downloadFile(url: string, fileName: string) {
+  await makeDir(path.dirname(fileName))
+  await removeFile(fileName)
 
-  const writer = createWriteStream(downloadFile)
-  const finishedPromise = new Promise<void>((r) => writer.on('finish', r))
+  const parsedURL = new URL(url)
+  const module = parsedURL.protocol === 'https:' ? https : http
 
-  const resp = await axios.get(url, {
-    responseType: 'stream',
-    onDownloadProgress: (e) => {
-      console.log(e.progress)
-    }
-  })
+  const writer = createWriteStream(fileName)
+  let finishedPromise = new Promise<void>((r) =>
+    writer.on('finish', () => {
+      writer.close()
+      r()
+    })
+  )
 
-  resp.data.pipe(writer)
+  let downloaded = false
+  while (!downloaded) {
+    await new Promise<void>((resolve) => {
+      module.get(url, (resp) => {
+        resolve()
+        if ([301, 302].includes(resp.statusCode)) {
+          log('redirecting to', resp.headers.location)
+          url = resp.headers.location
+        } else {
+          downloaded = true
+          resp.pipe(writer)
+        }
+      })
+    })
+  }
+
   await finishedPromise
 }
 
 export async function extractArchive(fileName: string, extractDir: string) {
+  log('extracting', fileName, 'to', extractDir)
   await makeDir(extractDir)
 
   if (fileName.endsWith('.zip')) {
@@ -83,7 +102,6 @@ export async function extractArchive(fileName: string, extractDir: string) {
 
   // IDK somehow resolve all tar extensions
   if (fileName.endsWith('.tar.gz')) {
-    // const writeStream = createWriteStream(path.join(extractDir, 'ext.tar'))
     const gzip = createReadStream(fileName).pipe(gunzip(100))
     const ext = gzip.pipe(tar.extract())
 
@@ -128,9 +146,28 @@ export function spawnAsync(cmd: string, options: SpawnOptionsWithoutStdio) {
   return new Promise<void>((resolve, reject) => {
     const process = spawn(cmd, options)
 
-    process.stdout.on('data', (d) => console.log(d.toString()))
-    process.stderr.on('data', (d) => console.log(d.toString()))
+    process.stdout.on('data', (d) => log(d.toString()))
+    process.stderr.on('data', (d) => log(d.toString()))
     process.on('error', reject)
     process.on('close', resolve)
   })
+}
+
+let totalOutput = ''
+export function updateOutput(...output: unknown[]) {
+  for (const o of output) {
+    totalOutput += o.toString().trim() + ' '
+  }
+  totalOutput += '  \n'
+  api?.setPreferences('patch-progress-output', totalOutput)
+}
+
+export function clearOutput() {
+  totalOutput = ''
+  api?.setPreferences('patch-progress-output', '')
+}
+
+export function log(...output: unknown[]) {
+  console.log(...output)
+  updateOutput(...output)
 }

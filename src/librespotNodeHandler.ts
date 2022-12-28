@@ -1,4 +1,4 @@
-import { makeDir, OS, spawnAsync } from './utils'
+import { makeDir, OS, spawnAsync, log } from './utils'
 
 import { fork } from 'child_process'
 import { promises as fs } from 'fs'
@@ -90,11 +90,6 @@ export class LibrespotNodeHandler {
       shell: true
     })
 
-    // await spawnAsync(`cp -r /home/ovenoboyo/projects/moosync/librespot-node librespot-node`, {
-    //   cwd: this.buildDir,
-    //   shell: true
-    // })
-
     return clonePath
   }
 
@@ -102,12 +97,19 @@ export class LibrespotNodeHandler {
     await new Promise<void>((resolve) => {
       const p = fork(yarnExec, ['install'], {
         cwd: cloneDir,
+        stdio: 'pipe',
         env: {
           ...process.env,
           PATH: `${process.env.PATH}${path.delimiter}${path.dirname(cargoExec)}`,
           CARGO_HOME: CARGO_HOME ?? process.env.CARGO_HOME,
           RUSTUP_HOME: RUSTUP_HOME ?? process.env.RUSTUP_HOME
         }
+      })
+
+      p.once('spawn', () => {
+        log('Starting compilation')
+        p.stdout?.on('data', (d) => log(d.toString()))
+        p.stderr?.on('data', (d) => log(d.toString()))
       })
 
       p.on('close', resolve)
@@ -147,8 +149,10 @@ export class LibrespotNodeHandler {
     }
 
     try {
-      console.log('replacing file at', replacePath)
+      log('  \nreplacing file at', replacePath)
       await copyFile(compiled, replacePath)
+
+      log('### Patch completed. Please restart the app')
     } catch (e) {
       console.error(e)
     }
