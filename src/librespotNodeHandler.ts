@@ -90,7 +90,19 @@ export class LibrespotNodeHandler {
       shell: true
     })
 
+    log('changing npm to yarn')
+    await this.changeNPMToYarn(clonePath)
+
     return clonePath
+  }
+
+  private async changeNPMToYarn(clonePath: string) {
+    const file = path.join(clonePath, 'package.json')
+    const data = await readFile(file, {
+      encoding: 'utf-8'
+    })
+
+    await writeFile(file, data.replaceAll('npm run', 'yarn'), { encoding: 'utf-8' })
   }
 
   private async compile(yarnExec: string, [cargoExec, CARGO_HOME, RUSTUP_HOME]: string[], cloneDir: string) {
