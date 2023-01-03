@@ -53,6 +53,7 @@ export class GitHandler {
     }
 
     try {
+      console.log('Checking git at', gitDir)
       await fs.access(gitDir ?? '')
       return gitDir
     } catch {}

@@ -7,6 +7,7 @@ import AdmZip from 'adm-zip'
 import { ExecException, exec, SpawnOptionsWithoutStdio, spawn } from 'child_process'
 import https from 'https'
 import http from 'http'
+import sudo from 'sudo-prompt'
 
 export enum OS {
   LINUX = 'linux',
@@ -19,7 +20,11 @@ export async function makeDir(dir: string) {
   try {
     await fs.access(dir)
   } catch {
-    await fs.mkdir(dir, { recursive: true })
+    try {
+      await fs.mkdir(dir, { recursive: true })
+    } catch (e) {
+      console.error(e)
+    }
   }
 }
 
@@ -89,10 +94,10 @@ export async function extractArchive(fileName: string, extractDir: string) {
 
   if (fileName.endsWith('.zip')) {
     const zip = new AdmZip(fileName)
-    await new Promise<void>((resolve, reject) => {
+    await new Promise<void>((resolve) => {
       zip.extractAllToAsync(extractDir, true, true, (e) => {
         if (e) {
-          reject(e)
+          console.error('got error while extracting', e)
           return
         }
         resolve()
@@ -100,10 +105,14 @@ export async function extractArchive(fileName: string, extractDir: string) {
     })
   }
 
-  // IDK somehow resolve all tar extensions
+  // TODO: IDK somehow resolve all tar extensions
   if (fileName.endsWith('.tar.gz')) {
     const gzip = createReadStream(fileName).pipe(gunzip(100))
-    const ext = gzip.pipe(tar.extract())
+    const ext = gzip.pipe(
+      tar.extract({
+        allowUnknownFormat: true
+      })
+    )
 
     await new Promise<void>((resolve, reject) => {
       ext.on('entry', (header, stream, next) => {
@@ -131,6 +140,8 @@ export async function extractArchive(fileName: string, extractDir: string) {
     })
   }
 
+  console.log('extracted archive')
+
   return extractDir
 }
 
@@ -150,6 +161,20 @@ export function spawnAsync(cmd: string, options: SpawnOptionsWithoutStdio) {
     process.stderr.on('data', (d) => log(d.toString()))
     process.on('error', reject)
     process.on('close', resolve)
+  })
+}
+
+export function sudoExecAsync(cmd: string) {
+  return new Promise<[ExecException, string, string]>((resolve) => {
+    sudo.exec(
+      cmd,
+      {
+        name: 'Librespot Patcher'
+      },
+      (error, stdout, stderr) => {
+        resolve([error, stdout.toString(), stderr.toString()])
+      }
+    )
   })
 }
 

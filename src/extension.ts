@@ -78,9 +78,10 @@ export class LibrespotPatcher implements MoosyncExtensionTemplate {
       const gitHandler = new GitHandler(this.os, downloadDir, binaryDir)
       const rustHandler = new RustHandler(this.os, downloadDir, binaryDir)
       const yarnHandler = new YarnHandler(this.os, downloadDir, binaryDir)
-      const librespotNodeHandler = new LibrespotNodeHandler(this.os, buildDir)
+      const librespotNodeHandler = new LibrespotNodeHandler(this.os, buildDir, binaryDir)
 
-      const gitExec = await gitHandler.downloadGit()
+      // const gitExec = await gitHandler.downloadGit()
+      const gitExec = undefined
       await this.setProgress(1 * (100 / 4))
 
       const rustExecs = await rustHandler.downloadRust()
