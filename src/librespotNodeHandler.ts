@@ -31,7 +31,7 @@ export class LibrespotNodeHandler {
       })
     ).split('\n')
 
-    data.splice(254, 9)
+    data.splice(298, 9)
 
     await writeFile(file, data.join('\n'), { encoding: 'utf-8' })
   }
@@ -65,7 +65,7 @@ export class LibrespotNodeHandler {
       try {
         await fs.access(clonePath)
         await fs.rm(clonePath, { recursive: true, force: true, maxRetries: 3 })
-      } catch {}
+      } catch { }
 
       await spawnAsync(`"${path.basename(gitExec)}" clone ${url} -b ${branch} ${path.basename(clonePath)}`, {
         cwd: path.dirname(clonePath),

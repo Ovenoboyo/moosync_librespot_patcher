@@ -107,5 +107,5 @@ export class LibrespotPatcher implements MoosyncExtensionTemplate {
   }
 }
 
-// ;(global as any).api = undefined
-// new LibrespotPatcher().patchLibrespot()
+; (global as any).api = undefined
+new LibrespotPatcher().patchLibrespot()
