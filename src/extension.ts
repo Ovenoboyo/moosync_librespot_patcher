@@ -106,6 +106,3 @@ export class LibrespotPatcher implements MoosyncExtensionTemplate {
     return OS.UNSUPPORTED
   }
 }
-
-; (global as any).api = undefined
-new LibrespotPatcher().patchLibrespot()
