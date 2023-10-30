@@ -53,14 +53,12 @@ jobs:
           sed -i -e 's/git = "https:\/\/github.com\/librespot-org\/librespot", branch = \"dev\"/path = ".\/librespot-custom"/g' Cargo.toml
           sed -i -e '/\[dependencies\]/a openssl = { version = "0.10", features = ["vendored"] }' Cargo.toml
 
-          rand_string=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
-
+          cd ../
           PACKAGE_VERSION=$(cat package.json \
             | grep version \
             | head -1 \
             | awk -F: '{ print $2 }' \
             | sed 's/[",]//g')
-          PACKAGE_VERSION="${PACKAGE_VERSION}-${rand_string}"
 
           os_string = "$(uname -m)_$(uname)"
 
@@ -91,7 +89,7 @@ jobs:
         with:
           draft: false
           prerelease: false
-          release_name: ${{ steps.version.outputs.version }}
+          release_name: ${{ steps.version.outputs.version }}-${{ github.run_id }}
           tag_name: ${{ github.ref }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -108,5 +106,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./dist/build/librespot.node
-          asset_name: librespot-${{ steps.version.outputs.osstring }}-${{ steps.version.outputs.version }}.nide
+          asset_name: librespot-${{ steps.version.outputs.osstring }}-${{ steps.version.outputs.version }}-${{ github.run_id }}.node
           asset_content_type: application/zip
