@@ -43,7 +43,7 @@ jobs:
 
           git clone https://github.com/librespot-org/librespot -b dev librespot-custom
 
-          sed -i -e '/fn check_catalogue/{n;N;N;N;N;N;N;N;N;d}' librespot-custom/src/core/session.rs
+          sed -i -e '/fn check_catalogue/{n;N;N;N;N;N;N;N;N;d}' librespot-custom/core/src/session.rs
           
           sed -i -e '/Bitrate::from_str(obj.get::<JsString, _, _>(cx, "bitrate")?.value(cx).as_str())/{n;d}' src/utils.rs
           sed -i -e 's/Bitrate::from_str(obj.get::<JsString, _, _>(cx, "bitrate")?.value(cx).as_str())/Bitrate::Bitrate160,/' src/utils.rs
