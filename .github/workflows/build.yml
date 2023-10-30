@@ -11,8 +11,6 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-20.04]
 
     steps:
-      - uses: actions/checkout@v3
-
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v3
         with:
@@ -52,6 +50,28 @@ jobs:
           sed -i -e 's/git = "https:\/\/github.com\/librespot-org\/librespot", branch = \"dev\"/path = ".\/librespot-custom"/g' Cargo.toml
           sed -i -e '/\[dependencies\]/a openssl = { version = "0.10", features = ["vendored"] }' Cargo.toml
 
+          rand_string=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
+
+          PACKAGE_VERSION=$(cat package.json \
+            | grep version \
+            | head -1 \
+            | awk -F: '{ print $2 }' \
+            | sed 's/[",]//g')
+          PACKAGE_VERSION="${PACKAGE_VERSION}-${rand_string}"
+
+          os_string = "$(uname -m)_$(uname)"
+
+          echo "::set-output name=osstring::${os_string}"
+          echo "::set-output name=version::${PACKAGE_VERSION}"
+        id: version
+
+      - uses: rickstaa/action-create-tag@v1
+        id: "tag_create"
+        with:
+          tag: ${{ steps.version.outputs.version }}
+          tag_exists_error: false
+          message: "Latest release"
+
 
       - uses: Swatinem/rust-cache@v2
         with:
@@ -62,7 +82,28 @@ jobs:
           cd librespot-node
           yarn install
 
+      - name: release
+        uses: actions/create-release@v1
+        id: create_release
+        with:
+          draft: false
+          prerelease: false
+          release_name: ${{ steps.version.outputs.version }}
+          tag_name: ${{ github.ref }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
       - uses: actions/upload-artifact@v3
         with:
           name: .node
           path: dist/build/*.node
+
+      - name: upload windows artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/build/librespot.node
+          asset_name: librespot-${{ steps.version.outputs.osstring }}-${{ steps.version.outputs.version }}.nide
+          asset_content_type: application/zip
