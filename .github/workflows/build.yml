@@ -28,14 +28,20 @@ jobs:
         run: sudo apt-get update -y && sudo apt-get install -y libasound2-dev libssl-dev libatomic1
 
       - name: Run clone repos
+        shell: bash
         run: |
+
+          if [[ "$OSTYPE" == "darwin"* ]]; then
+            brew install gnu-sed
+            alias sed=gsed
+          fi
+
           git config --global url.https://github.com/.insteadOf git://github.com/
           git clone https://github.com/Moosync/librespot-node
 
           cd librespot-node/native
 
           git clone https://github.com/librespot-org/librespot -b dev librespot-custom
-
 
           sed -i -e '/fn check_catalogue/{n;N;N;N;N;N;N;N;N;d}' librespot-custom/src/core/session.rs
           
