@@ -34,6 +34,7 @@ jobs:
           if [[ "$OSTYPE" == "darwin"* ]]; then
             brew install gnu-sed
             alias sed=gsed
+            PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
           fi
 
           git config --global url.https://github.com/.insteadOf git://github.com/
