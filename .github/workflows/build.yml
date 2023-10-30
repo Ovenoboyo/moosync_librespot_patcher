@@ -1,0 +1,61 @@
+name: Build/release
+
+on: workflow_dispatch
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-20.04]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v3
+        with:
+          node-version: '21'
+          cache: 'yarn'
+  
+      - uses: maxim-lobanov/setup-xcode@v1
+        if: ${{ runner.os == 'macOS' }}
+        with:
+          xcode-version: latest-stable
+  
+      - if: ${{ runner.os == 'Linux' }}
+        run: sudo apt-get update -y && sudo apt-get install -y libasound2-dev libssl-dev libatomic1
+
+      - name: Run clone repos
+        run: |
+          git config --global url.https://github.com/.insteadOf git://github.com/
+          git clone https://github.com/Moosync/librespot-node
+
+          cd librespot-node/native
+
+          git clone https://github.com/librespot-org/librespot -b dev librespot-custom
+
+
+          sed -i -e '/fn check_catalogue/{n;N;N;N;N;N;N;N;N;d}' librespot-custom/src/core/session.rs
+          
+          sed -i -e '/Bitrate::from_str(obj.get::<JsString, _, _>(cx, "bitrate")?.value(cx).as_str())/{n;d}' src/utils.rs
+          sed -i -e 's/Bitrate::from_str(obj.get::<JsString, _, _>(cx, "bitrate")?.value(cx).as_str())/Bitrate::Bitrate160,/' src/utils.rs
+
+          sed -i -e 's/git = "https:\/\/github.com\/librespot-org\/librespot", branch = \"dev\"/path = ".\/librespot-custom"/g' Cargo.toml
+          sed -i -e '/\[dependencies\]/a openssl = { version = "0.10", features = ["vendored"] }' Cargo.toml
+
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: librespot-node/native
+
+      - name: Compile
+        run: |
+          cd librespot-node
+          yarn install
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: .node
+          path: dist/build/*.node

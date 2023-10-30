@@ -144,6 +144,7 @@ export class LibrespotNodeHandler {
     }
 
     try {
+      log(`Copied build to ${replacePath}`)
       await unlink(replacePath)
       await copyFile(compiled, replacePath)
     } catch (e) {
@@ -194,6 +195,8 @@ export class LibrespotNodeHandler {
     const appImageTool = await this.getAppImageTool()
     const extractPath = await this.extractAppImage()
 
+    log(`Extracted AppImage to ${extractPath}`)
+
     const replacePath = path.join(
       extractPath,
       'resources',
@@ -207,12 +210,17 @@ export class LibrespotNodeHandler {
 
     try {
       await unlink(replacePath)
+      log(`Deleted ${replacePath}`)
+
       await copyFile(compiled, replacePath)
+      log(`Copied build to ${process.env.APPIMAGE}`)
 
       const repackedImage = await this.repackAppImage(appImageTool, extractPath)
 
       await unlink(process.env.APPIMAGE)
       await fs.rename(repackedImage, process.env.APPIMAGE)
+      log(`Repacked App Image`)
+
     } catch (e) {
       log(e)
     }

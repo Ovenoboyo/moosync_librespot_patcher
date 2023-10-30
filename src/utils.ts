@@ -1,13 +1,14 @@
-import { promises as fs, createWriteStream, createReadStream } from 'fs'
+import { ExecException, SpawnOptionsWithoutStdio, exec, spawn } from 'child_process'
+import { createReadStream, createWriteStream, promises as fs } from 'fs'
+
+import AdmZip from 'adm-zip'
 import crypto from 'crypto'
 import gunzip from 'gunzip-maybe'
-import tar from 'tar-stream'
-import path from 'path'
-import AdmZip from 'adm-zip'
-import { ExecException, exec, SpawnOptionsWithoutStdio, spawn } from 'child_process'
-import https from 'https'
 import http from 'http'
+import https from 'https'
+import path from 'path'
 import sudo from 'sudo-prompt'
+import tar from 'tar-stream'
 
 export enum OS {
   LINUX = 'linux',
@@ -16,7 +17,12 @@ export enum OS {
   UNSUPPORTED = 'unsupported'
 }
 
-export async function makeDir(dir: string) {
+export async function makeDir(dir: string, force = true) {
+
+  if (force) {
+    await fs.rm(dir, {force: true})
+  }
+
   try {
     await fs.access(dir)
   } catch {
