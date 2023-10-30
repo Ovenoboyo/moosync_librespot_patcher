@@ -25,9 +25,6 @@ jobs:
         with:
           xcode-version: latest-stable
   
-      - if: ${{ runner.os == 'Linux' }}
-        run: sudo apt-get update -y && sudo apt-get install -y libasound2-dev libssl-dev libatomic1
-
       - name: Run clone repos
         shell: bash
         run: |
@@ -67,12 +64,16 @@ jobs:
         id: version
 
       - uses: rickstaa/action-create-tag@v1
+        if: ${{ runner.os == 'Linux' }}
         id: "tag_create"
         with:
           tag: ${{ steps.version.outputs.version }}
           tag_exists_error: false
           message: "Latest release"
 
+      - if: ${{ runner.os == 'Linux' }}
+        run: sudo apt-get update -y && sudo apt-get install -y libasound2-dev libssl-dev libatomic1
+  
 
       - uses: Swatinem/rust-cache@v2
         with:
