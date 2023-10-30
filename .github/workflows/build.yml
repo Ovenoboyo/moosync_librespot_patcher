@@ -60,9 +60,9 @@ jobs:
             | awk -F: '{ print $2 }' \
             | sed 's/[",]//g')
 
-          os_string = "$(uname -m)_$(uname)"
+          OS_STRING="$(uname -m)_$(uname)"
 
-          echo "osstring=${os_string}" >> $GITHUB_OUTPUT
+          echo "osstring=${OS_STRING}" >> $GITHUB_OUTPUT
           echo "version=${PACKAGE_VERSION}" >> $GITHUB_OUTPUT
         id: version
 
